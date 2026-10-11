@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quelques mots pour toi</title>
+<meta name="theme-color" content="#7a1f2b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--rose:#e8c4c4;--rouge:#7a1f2b;--creme:#faf3e8;--sauge:#8fa584;--encre:#3a2326}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100svh;color:var(--encre);font-family:Inter,system-ui,sans-serif;
+ background:
+  url("fond.jpg") center/cover fixed no-repeat,
+  radial-gradient(60% 45% at 12% 8%,#d98c98 0,transparent 70%),
+  radial-gradient(50% 40% at 92% 20%,#a8b99c 0,transparent 70%),
+  radial-gradient(55% 45% at 85% 95%,#b5434f 0,transparent 70%),
+  radial-gradient(50% 40% at 8% 90%,#f0cfcf 0,transparent 70%),
+  #f4e3dc;
+ display:flex;flex-direction:column;align-items:center;
+ padding:max(1.5rem,env(safe-area-inset-top)) 1.1rem max(1.5rem,env(safe-area-inset-bottom));overflow-x:hidden}
+.haut{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:1.2rem;color:var(--rouge);text-align:center;margin-bottom:1.2rem;position:relative;z-index:2}
+main{width:100%;max-width:640px;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;flex:1;justify-content:center}
+.carte{width:100%;padding:2rem 1.6rem;border-radius:18px;background:rgba(250,243,232,.78);
+ -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(122,31,43,.15);
+ box-shadow:0 10px 40px rgba(122,31,43,.15);transition:opacity .7s ease}
+.carte.sort{opacity:0}
+.titre{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.5rem;font-weight:600;color:var(--rouge);text-align:center;margin-bottom:1.1rem}
+.poeme{font-family:"Cormorant Garamond",Georgia,serif;font-size:var(--taille,1.3rem);line-height:1.6;white-space:pre-line;text-align:center}
+.signature{margin-top:1.3rem;text-align:center;font-size:.85rem;color:#6b4a4e}
+.signature b{font-weight:500;color:var(--rouge)}
+.actions{display:flex;flex-direction:column;align-items:center;gap:1rem;margin-top:1.6rem}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.second{background:none;border:0;border-bottom:1px solid var(--rouge);color:var(--rouge);padding:.6rem .2rem;min-height:44px;font-size:.95rem}
+.principal{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.35rem;font-style:italic;color:var(--creme);
+ background:linear-gradient(135deg,#8c2634,#5e1520);border:0;border-radius:999px;padding:.95rem 2.2rem;min-height:52px;
+ box-shadow:0 6px 22px rgba(94,21,32,.35);transition:transform .3s,box-shadow .3s}
+.principal:hover,.principal:active{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 30px rgba(94,21,32,.45)}
+button:focus-visible{outline:2px solid var(--sauge);outline-offset:4px}
+footer{margin-top:1.5rem;font-size:.75rem;color:#6b4a4e;text-align:center;position:relative;z-index:2}
+.petale{position:fixed;top:-30px;width:12px;height:16px;border-radius:80% 0 80% 0;background:var(--rose);opacity:.75;z-index:1;pointer-events:none;animation:tombe linear infinite}
+@keyframes tombe{to{transform:translate(var(--d),110vh) rotate(540deg)}}
+@media(prefers-reduced-motion:reduce){.petale{display:none}.carte{transition:none}}
+</style>
+</head>
+<body>
+<p class="haut">Quelques mots pour toi, où que tu sois.</p>
+<main>
+ <article class="carte" id="carte" aria-live="polite">
+  <h1 class="titre" id="titre"></h1>
+  <div class="poeme" id="poeme"></div>
+  <p class="signature" id="sig"></p>
+ </article>
+ <div class="actions">
+  <button class="second" id="autre" type="button">Un autre poème</button>
+  <button class="principal" id="chanson" type="button">Pour quand tu penses à moi</button>
+ </div>
+</main>
+<footer>Fait avec tendresse</footer>
+
+<script>
+/* ===== CHANSONS =====
+   1) Colle ici les identifiants réels des vidéos de ta playlist (la partie après v= dans l'adresse).
+   2) Tant que la liste est vide, le bouton ouvre la playlist elle-même. */
+const PLAYLIST_ID = "PLLO16ZtYd-ns";
+const PLAYLIST_URL = "https://www.youtube.com/playlist?list=" + PLAYLIST_ID;
+/* Nombre de vidéos dans la playlist (56 au moment de la création). Mets ce nombre à jour si tu ajoutes ou retires des chansons. */
+const NB_CHANSONS = 56;
+const VIDEO_IDS = [
+  // "xxxxxxxxxxx",
+];
+
+/* ===== POÈMES (domaine public) ===== */
+const POEMES = [
+{t:"Sonnet 18",a:"William Shakespeare",d:"1609",x:`Shall I compare thee to a summer's day?
+Thou art more lovely and more temperate:
+Rough winds do shake the darling buds of May,
+And summer's lease hath all too short a date;
+Sometime too hot the eye of heaven shines,
+And often is his gold complexion dimm'd;
+And every fair from fair sometime declines,
+By chance, or nature's changing course, untrimm'd;
+But thy eternal summer shall not fade,
+Nor lose possession of that fair thou ow'st;
+Nor shall Death brag thou wander'st in his shade,
+When in eternal lines to time thou grow'st:
+So long as men can breathe or eyes can see,
+So long lives this, and this gives life to thee.`},
+{t:"Sonnet 116",a:"William Shakespeare",d:"1609",x:`Let me not to the marriage of true minds
+Admit impediments. Love is not love
+Which alters when it alteration finds,
+Or bends with the remover to remove:
+O no! it is an ever-fixed mark
+That looks on tempests and is never shaken;
+It is the star to every wandering bark,
+Whose worth's unknown, although his height be taken.`},
+{t:"Sonnet 29",a:"William Shakespeare",d:"1609",x:`Yet in these thoughts myself almost despising,
+Haply I think on thee, and then my state,
+Like to the lark at break of day arising
+From sullen earth, sings hymns at heaven's gate;
+For thy sweet love remember'd such wealth brings
+That then I scorn to change my state with kings.`},
+{t:"Bright Star",a:"John Keats",d:"écrit en 1819",x:`Bright star, would I were stedfast as thou art—
+Not in lone splendour hung aloft the night
+And watching, with eternal lids apart,
+Like nature's patient, sleepless Eremite,
+The moving waters at their priestlike task
+Of pure ablution round earth's human shores,
+Or gazing on the new soft-fallen mask
+Of snow upon the mountains and the moors—
+No—yet still stedfast, still unchangeable,
+Pillow'd upon my fair love's ripening breast,
+To feel for ever its soft fall and swell,
+Awake for ever in a sweet unrest,
+Still, still to hear her tender-taken breath,
+And so live ever—or else swoon to death.`},
+{t:"Sonnet 43",a:"Elizabeth Barrett Browning",d:"1850",x:`How do I love thee? Let me count the ways.
+I love thee to the depth and breadth and height
+My soul can reach, when feeling out of sight
+For the ends of being and ideal grace.
+I love thee to the level of every day's
+Most quiet need, by sun and candle-light.
+I love thee freely, as men strive for right;
+I love thee purely, as they turn from praise.
+I love thee with the passion put to use
+In my old griefs, and with my childhood's faith.
+I love thee with a love I seemed to lose
+With my lost saints,—I love thee with the breath,
+Smiles, tears, of all my life!—and, if God choose,
+I shall but love thee better after death.`},
+{t:"Sonnet 14",a:"Elizabeth Barrett Browning",d:"1850",x:`If thou must love me, let it be for naught
+Except for love's sake only. Do not say
+"I love her for her smile—her look—her way
+Of speaking gently,—for a trick of thought
+That falls in well with mine, and certes brought
+A sense of pleasant ease on such a day"—
+For these things in themselves, Beloved, may
+Be changed, or change for thee,—and love, so wrought,
+May be unwrought so. [...]
+But love me for love's sake, that evermore
+Thou mayst love on, through love's eternity.`},
+{t:"Wild Nights",a:"Emily Dickinson",d:"1891",x:`Wild Nights – Wild Nights!
+Were I with thee
+Wild Nights should be
+Our luxury!
+
+Futile – the Winds –
+To a Heart in port –
+Done with the Compass –
+Done with the Chart!
+
+Rowing in Eden –
+Ah, the Sea!
+Might I but moor – Tonight –
+In thee!`},
+{t:"That I did always love",a:"Emily Dickinson",d:"publié en 1890",x:`That I did always love
+I bring thee Proof
+That till I loved
+I did not love enough.
+
+That I shall love alway –
+I offer thee
+That Love is life –
+And life hath Immortality –`},
+{t:"Vert",a:"Paul Verlaine",d:"Romances sans paroles, 1874",x:`Voici des fruits, des fleurs, des feuilles et des branches,
+Et puis voici mon cœur, qui ne bat que pour vous.
+Ne le déchirez pas avec vos deux mains blanches
+Et qu'à vos yeux si beaux l'humble présent soit doux.
+
+J'arrive tout couvert encore de rosée
+Que le vent du matin vient glacer à mon front.
+Souffrez que ma fatigue, à vos pieds reposée,
+Rêve des chers instants qui la délasseront.
+
+Sur votre jeune sein laissez rouler ma tête
+Toute sonore encor de vos derniers baisers ;
+Laissez-la s'apaiser de la bonne tempête,
+Et que je dorme un peu puisque vous reposez.`},
+{t:"Mon rêve familier",a:"Paul Verlaine",d:"Poèmes saturniens, 1866",x:`Je fais souvent ce rêve étrange et pénétrant
+D'une femme inconnue, et que j'aime, et qui m'aime,
+Et qui n'est, chaque fois, ni tout à fait la même
+Ni tout à fait une autre, et m'aime et me comprend.
+
+Car elle me comprend, et mon cœur, transparent
+Pour elle seule, hélas ! cesse d'être un problème
+Pour elle seule, et les moiteurs de mon front blême,
+Elle seule les sait rafraîchir, en pleurant.`},
+{t:"Elle était déchaussée, elle était décoiffée",a:"Victor Hugo",d:"Les Contemplations, 1856",x:`Elle était déchaussée, elle était décoiffée,
+Assise, les pieds nus, parmi les joncs penchants ;
+Moi qui passais par là, je crus voir une fée,
+Et je lui dis : Veux-tu t'en venir dans les champs ?
+
+Elle me regarda de ce regard suprême
+Qui reste à la beauté quand nous en triomphons,
+Et je lui dis : Veux-tu, c'est le mois où l'on aime,
+Veux-tu nous en aller sous les arbres profonds ?`},
+{t:"À une passante",a:"Charles Baudelaire",d:"Les Fleurs du mal, 1857",x:`Longue, mince, en grand deuil, douleur majestueuse,
+Une femme passa, d'une main fastueuse
+Soulevant, balançant le feston et l'ourlet ;
+
+Un éclair… puis la nuit ! Fugitive beauté
+Dont le regard m'a fait soudainement renaître,
+Ne te verrai-je plus que dans l'éternité ?
+
+Ailleurs, bien loin d'ici ! trop tard ! jamais peut-être !
+Car j'ignore où tu fuis, tu ne sais où je vais,
+Ô toi que j'eusse aimée, ô toi qui le savais !`},
+{t:"Harmonie du soir",a:"Charles Baudelaire",d:"Les Fleurs du mal, 1857",x:`Voici venir les temps où vibrant sur sa tige
+Chaque fleur s'évapore ainsi qu'un encensoir ;
+Les sons et les parfums tournent dans l'air du soir ;
+Valse mélancolique et langoureux vertige !
+
+Un cœur tendre, qui hait le néant vaste et noir,
+Du passé lumineux recueille tout vestige !
+Le soleil s'est noyé dans son sang qui se fige…
+Ton souvenir en moi luit comme un ostensoir !`},
+{t:"Chanson de Fortunio",a:"Alfred de Musset",d:"1835",x:`Si vous croyez que je vais dire
+Qui j'ose aimer,
+Je ne saurais, pour un empire,
+Vous la nommer.
+
+Nous allons chanter à la ronde,
+Si vous voulez,
+Que je l'adore et qu'elle est blonde
+Comme les blés.
+
+Mais j'aime trop pour que je die
+Qui j'ose aimer,
+Et je veux mourir pour ma mie
+Sans la nommer.`},
+{t:"Mignonne, allons voir si la rose",a:"Pierre de Ronsard",d:"Odes, 1550",x:`Mignonne, allons voir si la rose
+Qui ce matin avait déclose
+Sa robe de pourpre au soleil,
+A point perdu cette vesprée
+Les plis de sa robe pourprée,
+Et son teint au vôtre pareil.
+
+Donc, si vous me croyez, mignonne,
+Tandis que votre âge fleuronne
+En sa plus verte nouveauté,
+Cueillez, cueillez votre jeunesse :
+Comme à cette fleur, la vieillesse
+Fera ternir votre beauté.`},
+{t:"Quand vous serez bien vieille",a:"Pierre de Ronsard",d:"Sonnets pour Hélène, 1578",x:`Quand vous serez bien vieille, au soir, à la chandelle,
+Assise auprès du feu, dévidant et filant,
+Direz, chantant mes vers, en vous émerveillant :
+« Ronsard me célébrait du temps que j'étais belle. »
+
+Regrettant mon amour et votre fier dédain.
+Vivez, si m'en croyez, n'attendez à demain :
+Cueillez dès aujourd'hui les roses de la vie.`},
+{t:"Le Pont Mirabeau",a:"Guillaume Apollinaire",d:"Alcools, 1913",x:`Sous le pont Mirabeau coule la Seine
+Et nos amours
+Faut-il qu'il m'en souvienne
+La joie venait toujours après la peine
+
+Vienne la nuit sonne l'heure
+Les jours s'en vont je demeure
+
+Les mains dans les mains restons face à face
+Tandis que sous
+Le pont de nos bras passe
+Des éternels regards l'onde si lasse
+
+Vienne la nuit sonne l'heure
+Les jours s'en vont je demeure`},
+{t:"Echo",a:"Christina Rossetti",d:"écrit en 1854",x:`Come to me in the silence of the night;
+Come in the speaking silence of a dream;
+Come with soft rounded cheeks and eyes as bright
+As sunlight on a stream;
+Come back in tears,
+O memory, hope, love of finished years.
+
+Yet come to me in dreams, that I may live
+My very life again though cold in death:
+Come back to me in dreams, that I may give
+Pulse for pulse, breath for breath:
+Speak low, lean low,
+As long ago, my love, how long ago.`},
+{t:"A Birthday",a:"Christina Rossetti",d:"1861",x:`My heart is like a singing bird
+Whose nest is in a water'd shoot;
+My heart is like an apple-tree
+Whose boughs are bent with thickset fruit;
+My heart is like a rainbow shell
+That paddles in a halcyon sea;
+My heart is gladder than all these
+Because my love is come to me.`},
+{t:"A Red, Red Rose",a:"Robert Burns",d:"1794",x:`O my Luve's like a red, red rose,
+That's newly sprung in June;
+O my Luve's like the melodie
+That's sweetly play'd in tune.
+
+As fair art thou, my bonnie lass,
+So deep in luve am I;
+And I will luve thee still, my dear,
+Till a' the seas gang dry.
+
+And fare thee weel, my only Luve!
+And fare thee weel a while!
+And I will come again, my Luve,
+Tho' it were ten thousand mile.`},
+{t:"She Walks in Beauty",a:"Lord Byron",d:"1814",x:`She walks in beauty, like the night
+Of cloudless climes and starry skies;
+And all that's best of dark and bright
+Meet in her aspect and her eyes;
+Thus mellow'd to that tender light
+Which heaven to gaudy day denies.`},
+{t:"Love's Philosophy",a:"Percy Bysshe Shelley",d:"1819",x:`The fountains mingle with the river
+And the rivers with the ocean,
+The winds of Heaven mix for ever
+With a sweet emotion;
+Nothing in the world is single;
+All things by a law divine
+In one spirit meet and mingle.
+Why not I with thine?`},
+{t:"She Dwelt Among the Untrodden Ways",a:"William Wordsworth",d:"1800",x:`She dwelt among the untrodden ways
+Beside the springs of Dove,
+A Maid whom there were none to praise
+And very few to love:
+
+A violet by a mossy stone
+Half hidden from the eye!
+—Fair as a star, when only one
+Is shining in the sky.
+
+She lived unknown, and few could know
+When Lucy ceased to be;
+But she is in her grave, and, oh,
+The difference to me!`},
+{t:"The Passionate Shepherd to His Love",a:"Christopher Marlowe",d:"1599",x:`Come live with me and be my love,
+And we will all the pleasures prove
+That valleys, groves, hills, and fields,
+Woods or steepy mountain yields.
+
+And I will make thee beds of roses
+And a thousand fragrant posies,
+A cap of flowers, and a kirtle
+Embroidered all with leaves of myrtle.`},
+{t:"Meeting at Night",a:"Robert Browning",d:"1845",x:`The grey sea and the long black land;
+And the yellow half-moon large and low;
+And the startled little waves that leap
+In fiery ringlets from their sleep,
+As I gain the cove with pushing prow,
+And quench its speed i' the slushy sand.
+
+Then a mile of warm sea-scented beach;
+Three fields to cross till a farm appears;
+A tap at the pane, the quick sharp scratch
+And blue spurt of a lighted match,
+And a voice less loud, thro' its joys and fears,
+Than the two hearts beating each to each!`},
+{t:"Le Lac",a:"Alphonse de Lamartine",d:"Méditations poétiques, 1820",x:`Ainsi, toujours poussés vers de nouveaux rivages,
+Dans la nuit éternelle emportés sans retour,
+Ne pourrons-nous jamais sur l'océan des âges
+Jeter l'ancre un seul jour ?
+
+Ô lac ! l'année à peine a fini sa carrière,
+Et près des flots chéris qu'elle devait revoir,
+Regarde ! je viens seul m'asseoir sur cette pierre
+Où tu la vis s'asseoir !`},
+{t:"Les Roses de Saadi",a:"Marceline Desbordes-Valmore",d:"1860 (posthume)",x:`J'ai voulu ce matin te rapporter des roses ;
+Mais j'en avais tant pris dans mes ceintures closes
+Que les nœuds trop serrés n'ont pu les contenir.
+
+Les nœuds ont éclaté. Les roses envolées
+Dans le vent, à la mer s'en sont toutes allées.
+Elles ont suivi l'eau pour ne plus revenir ;
+
+La vague en a paru rouge et comme enflammée.
+Ce soir, ma robe encore en est tout embaumée…
+Respires-en sur moi l'odorant souvenir.`},
+{t:"He Wishes for the Cloths of Heaven",a:"W. B. Yeats",d:"The Wind Among the Reeds, 1899",x:`Had I the heavens' embroidered cloths,
+Enwrought with golden and silver light,
+The blue and the dim and the dark cloths
+Of night and light and the half-light,
+I would spread the cloths under your feet:
+But I, being poor, have only my dreams;
+I have spread my dreams under your feet;
+Tread softly because you tread on my dreams.`},
+{t:"Le Spectre de la rose",a:"Théophile Gautier",d:"1838",x:`Soulève ta paupière close
+Qu'effleure un songe virginal ;
+Je suis le spectre d'une rose
+Que tu portais hier au bal.
+
+Ce léger parfum est mon âme,
+Et j'arrive du paradis.`},
+{t:"Baise m'encor",a:"Louise Labé",d:"Sonnets, 1555",x:`Baise m'encor, rebaise-moi et baise ;
+Donne m'en un de tes plus savoureux,
+Donne m'en un de tes plus amoureux :
+Je t'en rendrai quatre plus chauds que braise.`}
+];
+
+/* ===== AFFICHAGE ===== */
+const $ = id => document.getElementById(id);
+const carte = $("carte");
+function lire(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+function ecrire(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }
+
+/* Tirage aléatoire sans répéter le précédent */
+function tirer(n, cle){
+  if(n < 2) return 0;
+  const dernier = parseInt(lire(cle), 10);
+  let i;
+  do { i = Math.floor(Math.random() * n); } while(i === dernier);
+  ecrire(cle, i);
+  return i;
+}
+
+function remplir(p){
+  $("titre").textContent = p.t;
+  $("poeme").textContent = p.x;
+  $("sig").innerHTML = "";
+  const b = document.createElement("b"); b.textContent = p.a;
+  $("sig").append(b, " · " + p.d);
+  const lignes = p.x.split("\n").length;
+  const longueur = Math.max(...p.x.split("\n").map(l => l.length));
+  let t = 1.45;
+  if(lignes > 8) t = 1.3;
+  if(lignes > 12) t = 1.2;
+  if(longueur > 55) t -= 0.1;
+  if(window.innerWidth < 480) t -= 0.08;
+  $("poeme").style.setProperty("--taille", t + "rem");
+}
+
+function afficher(premier){
+  const p = POEMES[tirer(POEMES.length, "dernierPoeme")];
+  if(premier){ remplir(p); return; }
+  carte.classList.add("sort");
+  setTimeout(() => { remplir(p); window.scrollTo({top:0}); carte.classList.remove("sort"); }, 700);
+}
+
+$("autre").addEventListener("click", () => afficher(false));
+
+/* ===== CHANSON ===== */
+$("chanson").addEventListener("click", () => {
+  if(VIDEO_IDS.length){
+    const id = VIDEO_IDS[tirer(VIDEO_IDS.length, "derniereChanson")];
+    window.open("https://www.youtube.com/watch?v=" + encodeURIComponent(id) +
+      "&list=" + encodeURIComponent(PLAYLIST_ID), "_blank", "noopener");
+  } else if(NB_CHANSONS > 0){
+    /* Tirage d'une position dans la playlist : lecture de la Nième vidéo de ta playlist */
+    const n = tirer(NB_CHANSONS, "derniereChanson") + 1;
+    window.open("https://www.youtube.com/watch?list=" + PLAYLIST_ID + "&index=" + n, "_blank", "noopener");
+  } else {
+    window.open(PLAYLIST_URL, "_blank", "noopener");
+  }
+});
+
+/* ===== PÉTALES DISCRETS ===== */
+if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+  for(let i = 0; i < 10; i++){
+    const e = document.createElement("span");
+    e.className = "petale";
+    e.style.left = Math.random() * 100 + "vw";
+    e.style.setProperty("--d", (Math.random() * 120 - 60) + "px");
+    e.style.animationDuration = (14 + Math.random() * 14) + "s";
+    e.style.animationDelay = (-Math.random() * 20) + "s";
+    e.style.opacity = 0.45 + Math.random() * 0.35;
+    document.body.appendChild(e);
+  }
+}
+
+afficher(true);
+</script>
+</body>
+</html>
